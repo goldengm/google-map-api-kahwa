@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Kahwa</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- <link href="./page.css" rel="stylesheet" type="text/css" media="all" /> -->
+    <script src="https://maps.google.com/maps/api/js?key=AIzaSyB-41Jlmbuki00p0g4I7b5_6Jr9G58cCaQ&sensor=true"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+</head>
+<script>
+    var locations = [
+        ['Kahwa West St. Pete Drive Thru', '5820 9th Avenue N St. Petersburg FL 33710', '7279142194', 27.780540, -82.712750],
+        ['Kahwa St. Pete Bayfront', '701 6th Street South St. Petersburg FL 33701', '7275924901', 27.763530, -82.642290],
+        ['Kahwa St. Pete Downtown South', '204 2nd Ave S St. Petersburg FL 33701', '7278211942', 27.769460, -82.636620],
+        ['Kahwa St. Pete Downtown North', '475 2nd Street North St. Petersburg FL 33701', '7278234700', 27.773780, -82.635580],
+        ['Kahwa St. Pete Drive Thru', '3901 3rd Street North St. Petersburg FL 33703', '7277670429', 27.807820, -82.636230],
+        ['Kahwa Belleair', '2919 West Bay Drive Belleair Bluffs FL 33770', '7273306446', 27.916840, -82.818750],
+        ['Kahwa South Tampa', '3928 Henderson Blvd Tampa FL 33629', '8134430819', 27.930680, -82.509320],
+        ['Kahwa at International Plaza', '2223 N Westshore Blvd Tampa FL 33607', '8133423790', 27.959560, -82.524040],
+        ['Kahwa at Mercedes-Benz of Tampa', '4400 North Dale Mabry Highway Tampa FL 33614', '8135792138', 27.982390, -82.506310],
+        ['Kahwa Tampa Downtown', '808 North Tampa Street Tampa FL 33602', '8132287900', 27.950710, -82.459960],
+        ['Kahwa Tampa Westchase', '11588 Fountainhead Drive Tampa FL 33626', '8139203344', 28.082230, -82.615400],
+        ['Kahwa at UTC Mall', '140 University Town Center Dr. Sarasota FL 34243', '9412483300', 27.383460, -82.453060],
+        ['Kahwa Lakewood Ranch', '8317 Market St Bradenton FL 34202', '9413511551', 27.390160, -82.441060],
+        ['Kahwa Sarasota Downtown', '1487 2nd St Sarasota FL 34236', '9412038971', 27.338290, -82.540990]
+    ];
+
+    function alert() {
+        $(".infowindow").on('click', function() {
+            alert('123');
+        })
+    }
+    function initMap() {
+        // The location of center
+        var center = {lat: 27.780540, lng: -82.712750};
+        // The map, centered at center
+        var map = new google.maps.Map(document.getElementById('map'), {zoom: 8, center: center});
+        // The marker, positioned at center
+        var marker = new google.maps.Marker({position: center, map: map});
+
+        var infowindow = new google.maps.InfoWindow({});
+        var marker, count;
+        for (count = 0; count < locations.length; count++) {
+            marker = new google.maps.Marker({
+                position: new google.maps.LatLng(locations[count][3], locations[count][4]),
+                map: map,
+                title: locations[count][0]
+            });
+
+            google.maps.event.addListener(marker, 'click', (function (marker, count) {
+                return function () {
+                    infowindow.setContent(
+                        '<div class="infowindow" style="width: 160px;">' +
+                        '<p><span style="font-weight: bold;">' + locations[count][0] + '</span><br>' + locations[count][1] + '</p>' +
+                        '<p><span style="font-weight: bold;">Phone</span> : ' + locations[count][2] + '</p>' +
+                        '</div>'
+                    );
+                    infowindow.open(map, marker);
+                    alert();
+                }
+            }) (marker, count))
+        }
+    }
+
+    $(document).ready(function() {
+        initMap();
+        var yourPos = locations[0][3] + ',' + locations[0][4];
+        $("#getPos").click(function(event) {
+            if (typeof navigator.geolocation == "undefined") {
+                $("#error").text("Your browser doesn't support the Geolocation API");
+                return;
+            }
+
+            event.preventDefault();
+            var addressId = this.id.substring(0, this.id.indexOf("-"));
+
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var geocoder = new google.maps.Geocoder();
+                geocoder.geocode({
+                    "location": new google.maps.LatLng(position.coords.latitude, position.coords.longitude)
+                }, function(results, status) {
+                    if (status == google.maps.GeocoderStatus.OK)
+                        $("#yourPos").val(results[0].formatted_address);
+                        yourPos = results[0].formatted_address;
+                    });
+                }, function(positionError){
+                }, {
+                enableHighAccuracy: true,
+                timeout: 10 * 1000 // 10 seconds
+            });
+        });
+
+        $("#yourPos").on('change', function() {
+            yourPos = $(this).val();
+        })
+
+        $(".dir").click(function() {
+            var id = $(this).attr('id');
+            var destination = locations[id][3] + ',' + locations[id][4];
+            console.log($("#yourPos").val);
+            console.log(destination);
+            $(this).attr('href', 'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=' + yourPos + '&destination=' + destination);
+        });
+
+    })
+
+</script>
+<body>
+
+    <div class="row" style="margin: 20px auto; height: 20px; width: 60%">
+        <div>
+            <input type="text" id="yourPos" name="yourPos" required="required" placeholder="Your Position" size="30" value="Kahwa West St. Pete Drive Thru 5820 9th Avenue N St. Petersburg FL 33710" />
+            <a id="getPos" href="#" class="text-primary" style="margin-top: 10px">Get my position</a>
+        </div>
+    </div>
+    <div class="row" style="margin: 20px auto; width: 60%">
+        <div class="col-6" style="overflow: scroll; height: 600px;">
+            <div style="border-bottom: 1px solid; margin-top: 5px;">
+                <p class="text-danger">Kahwa West St. Pete Drive Thru</p>
+                <p>
+                    5820 9th Avenue N St. Petersburg FL 33710 United States
+                </p>    
+                <p>Phone: 7279142194</p>
+                <a class="dir" href="#" id="0" target="_blank">Directions</a>
+            </div>
+            <div style="border-bottom: 1px solid; margin-top: 5px;">
+                <p class="text-danger">Kahwa St. Pete Bayfront</p>
+                <p>
+                    701 6th Street South St. Petersburg FL 33701 United States
+                </p>    
+                <p>Phone: 7279142194</p>
+                <a class="dir" href="#" id="1" target="_blank">Directions</a>
+            </div>
+            <div style="border-bottom: 1px solid; margin-top: 5px;">
+                <p class="text-danger">Kahwa St. Pete Downtown South</p>
+                <p>
+                    204 2nd Ave S St. Petersburg FL 33701 United States
+                </p>    
+                <p>Phone: 7279142194</p>
+                <a class="dir" href="#" id="2" target="_blank">Directions</a>
+            </div>
+            <div style="border-bottom: 1px solid; margin-top: 5px;">
+                <p class="text-danger">Kahwa St. Pete Downtown North</p>
+                <p>
+                    475 2nd Street North St. Petersburg FL 33701 United States
+                </p>    
+                <p>Phone: 7279142194</p>
+                <a class="dir" href="#" id="3" target="_blank">Directions</a>
+            </div>
+            <div style="border-bottom: 1px solid; margin-top: 5px;">
+                <p class="text-danger">Kahwa St. Pete Drive Thru</p>
+                <p>
+                    3901 3rd Street North St. Petersburg FL 33703 United States
+                </p>    
+                <p>Phone: 7277670429</p>
+                <a class="dir" href="#" id="4" target="_blank">Directions</a>
+            </div>
+            <div style="border-bottom: 1px solid; margin-top: 5px;">
+                <p class="text-danger">Kahwa Belleair</p>
+                <p>
+                    2919 West Bay Drive Belleair Bluffs FL 33770 United States
+                </p>    
+                <p>Phone: 7273306446</p>
+                <a class="dir" href="#" id="5" target="_blank">Directions</a>
+            </div>
+        </div>
+        <div class="col-6" id="map"></div>
+    </div>
+</body>
+</html>
